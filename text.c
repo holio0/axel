@@ -344,44 +344,23 @@ int main( int argc, char *argv[] )
 	while( !axel->ready && run )
 	{
 		long long int prev, done;
+		const double delay_secs = 0.1;
+		static double last_update = 0;
+		double now;
 		
 		prev = axel->bytes_done;
 		axel_do( axel );
 		
-		if( conf->alternate_output )
-		{			
+		now = gettime();
+		if (now > last_update + delay_secs)
 			if( !axel->message && prev != axel->bytes_done )
-				print_alternate_output( axel );
-		}
-		else
-		{
-			/* The infamous wget-like 'interface'.. ;)		*/
-			done = ( axel->bytes_done / 1024 ) - ( prev / 1024 );
-			if( done && conf->verbose > -1 )
 			{
-				for( i = 0; i < done; i ++ )
-				{
-					i += ( prev / 1024 );
-					if( ( i % 50 ) == 0 )
-					{
-						if( prev >= 1024 )
-							printf( "  [%6.1fKB/s]", (double) axel->bytes_per_second / 1024 );
-						if( axel->size < 10240000 )
-							printf( "\n[%3lld%%]  ", min( 100, 102400 * i / axel->size ) );
-						else
-							printf( "\n[%3lld%%]  ", min( 100, i / ( axel->size / 102400 ) ) );
-					}
-					else if( ( i % 10 ) == 0 )
-					{
-						putchar( ' ' );
-					}
-					putchar( '.' );
-					i -= ( prev / 1024 );
-				}
-				fflush( stdout );
+				last_update = now;
+				print_alternate_output( axel );
+				if( !conf->alternate_output )
+					printf("\n");
 			}
-		}
-		
+
 		if( axel->message )
 		{
 			if(conf->alternate_output==1)
